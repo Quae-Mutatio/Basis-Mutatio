@@ -1,0 +1,31 @@
+modLoader = "javafml"
+loaderVersion = "[34,)"
+license = "GNU GPLv3"
+issueTrackerURL = "https://github.com/Quae-Mutatio/Basis-Mutatio/issues"
+
+[[mods]]
+modId = "basismutatio" #mandatory
+version = "${file.jarVersion}" #mandatory
+displayName = "Basis Mutatio" #mandatory
+#updateJSONURL="?"
+displayURL = "https://basis.mods.quae.dev/"
+logoFile = "logo.png"
+credits = "?"
+authors = "Quae Mutatio"
+description = '''
+Core/Lib mod
+'''
+
+[[dependencies.basismutatio]]
+modId = "forge"
+mandatory = true
+versionRange = "[34,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.basismutatio]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.16.3]"
+ordering = "NONE"
+side = "BOTH"
