@@ -110,9 +110,19 @@ public interface IPart {
 
   void registerClientJob(Runnable job);
 
-  void registerBlockColors(IBlockColor color, Supplier<Block>... blocks);
+  void registerBlockColors(IBlockColor color, Supplier<Block>[] blocks);
 
-  void registerItemColors(IItemColor color, Supplier<Item>... items);
+  @SuppressWarnings("unchecked")
+  default void registerBlockColors(IBlockColor color, Supplier<Block> block) {
+    registerBlockColors(color, new Supplier[]{block});
+  }
+
+  void registerItemColors(IItemColor color, Supplier<Item>[] items);
+
+  @SuppressWarnings("unchecked")
+  default void registerItemColors(IItemColor color, Supplier<Item> item) {
+    registerItemColors(color, new Supplier[]{item});
+  }
 
   void initialize(RegistryWrapper registryWrapper, DataGeneratorWrapper dataGeneratorWrapper);
 }
