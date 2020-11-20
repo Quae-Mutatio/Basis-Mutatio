@@ -19,7 +19,7 @@ group = property('group')
 archivesBaseName = property('id')
 
 sourceSets {
-    main.resources.srcDirs += 'src/main/generated/resources'
+    test.resources.srcDirs += 'src/test/generated/resources'
 }
 
 repositories {
@@ -55,6 +55,7 @@ minecraft {
             mods {
                 Basis {
                     source sourceSets.main
+                    source sourceSets.test
                 }
             }
         }
@@ -66,6 +67,7 @@ minecraft {
             mods {
                 Basis {
                     source sourceSets.main
+                    source sourceSets.test
                 }
             }
         }
@@ -76,12 +78,13 @@ minecraft {
             ideaModule "${project.name}.main"
             args '--mod', 'basismutatio',
                     '--all',
-                    '--output', file('src/main/generated/resources/'),
-                    '--existing', file('src/main/resources'),
-                    '--existing', file('src/main/generated/resources/')
+                    '--output', file('src/test/generated/resources/'),
+                    '--existing', file('src/test/resources'),
+                    '--existing', file('src/test/generated/resources/')
             mods {
                 Basis {
                     source sourceSets.main
+                    source sourceSets.test
                 }
             }
         }
