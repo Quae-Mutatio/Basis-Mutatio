@@ -4,6 +4,8 @@ import dev.quae.mods.basis.wrappers.DataGeneratorWrapper;
 import dev.quae.mods.basis.wrappers.RegistryWrapper;
 import java.util.function.Supplier;
 import net.minecraft.block.Block;
+import net.minecraft.client.renderer.color.IBlockColor;
+import net.minecraft.client.renderer.color.IItemColor;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.attributes.Attribute;
@@ -105,6 +107,12 @@ public interface IPart {
   <T extends DataSerializerEntry> RegistryObject<T> registerDataSerializerEntry(String name, Supplier<T> thing);
 
   <T extends GlobalLootModifierSerializer<?>> RegistryObject<T> registerGlobalLootTableModifierSerializer(String name, Supplier<T> thing);
+
+  void registerClientJob(Runnable job);
+
+  void registerBlockColors(IBlockColor color, Block... blocks);
+
+  void registerItemColors(IItemColor color, Item... items);
 
   void initialize(RegistryWrapper registryWrapper, DataGeneratorWrapper dataGeneratorWrapper);
 }

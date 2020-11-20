@@ -4,6 +4,8 @@ import dev.quae.mods.basis.BasisMutatio;
 import net.minecraft.block.AbstractBlock.Properties;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.data.ShapelessRecipeBuilder;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
@@ -23,6 +25,9 @@ public class CobbleCopyPart extends BasePart {
   public void initEverything() {
     block = registerBlock(NAME, () -> new Block(Properties.from(Blocks.COBBLESTONE)));
     item = registerItem(NAME, block.lazyMap(it -> new BlockItem(it, new Item.Properties().group(ItemGroup.BUILDING_BLOCKS))));
+
+    // No-op but example of client job.
+    registerClientJob(() -> RenderTypeLookup.setRenderLayer(block.get(), RenderType.getSolid()));
   }
 
   @Override

@@ -13,6 +13,8 @@ import net.minecraft.advancements.criterion.ItemPredicate;
 import net.minecraft.advancements.criterion.MinMaxBounds;
 import net.minecraft.advancements.criterion.StatePropertiesPredicate;
 import net.minecraft.block.Block;
+import net.minecraft.client.renderer.color.IBlockColor;
+import net.minecraft.client.renderer.color.IItemColor;
 import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.data.RecipeProvider;
 import net.minecraft.data.TagsProvider.Builder;
@@ -226,6 +228,21 @@ public abstract class BasePart implements IPart {
   @Override
   public <T extends GlobalLootModifierSerializer<?>> RegistryObject<T> registerGlobalLootTableModifierSerializer(String name, Supplier<T> thing) {
     return registryWrapper.getLootModifierSerializers().register(name, thing);
+  }
+
+  @Override
+  public void registerClientJob(Runnable job) {
+    registryWrapper.getClientJobList().add(job);
+  }
+
+  @Override
+  public void registerBlockColors(IBlockColor color, Block... blocks) {
+    registryWrapper.getBlockColorMap().put(color, blocks);
+  }
+
+  @Override
+  public void registerItemColors(IItemColor color, Item... items) {
+    registryWrapper.getItemColorMap().put(color, items);
   }
 
   public void genTranslation(Consumer<LanguageProvider> consumer) {

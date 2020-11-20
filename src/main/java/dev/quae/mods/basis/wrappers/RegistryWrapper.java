@@ -1,6 +1,15 @@
 package dev.quae.mods.basis.wrappers;
 
+import com.electronwill.nightconfig.core.utils.TransformingCollection;
+import com.google.common.collect.HashBiMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import net.minecraft.block.Block;
+import net.minecraft.client.renderer.color.BlockColors;
+import net.minecraft.client.renderer.color.IBlockColor;
+import net.minecraft.client.renderer.color.IItemColor;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.attributes.Attribute;
@@ -31,9 +40,11 @@ import net.minecraft.world.gen.foliageplacer.FoliagePlacerType;
 import net.minecraft.world.gen.placement.Placement;
 import net.minecraft.world.gen.surfacebuilders.SurfaceBuilder;
 import net.minecraft.world.gen.treedecorator.TreeDecoratorType;
+import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLModContainer;
 import net.minecraftforge.registries.DataSerializerEntry;
 import net.minecraftforge.registries.DeferredRegister;
@@ -74,6 +85,9 @@ public final class RegistryWrapper {
   private final DeferredRegister<TreeDecoratorType<?>> treeDecoratorTypes;
   private final DeferredRegister<DataSerializerEntry> dataSerializers;
   private final DeferredRegister<GlobalLootModifierSerializer<?>> lootModifierSerializers;
+  private final Set<Runnable> clientSetups;
+  private final Map<IBlockColor, Block[]> blockColors;
+  private final Map<IItemColor, Item[]> itemColors;
 
   private RegistryWrapper(final String modId) {
     final IEventBus modEventBus = ModList.get()
@@ -115,6 +129,12 @@ public final class RegistryWrapper {
     (this.treeDecoratorTypes = DeferredRegister.create(ForgeRegistries.TREE_DECORATOR_TYPES, modId)).register(modEventBus);
     (this.dataSerializers = DeferredRegister.create(ForgeRegistries.DATA_SERIALIZERS, modId)).register(modEventBus);
     (this.lootModifierSerializers = DeferredRegister.create(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS, modId)).register(modEventBus);
+    this.clientSetups = new HashSet<>();
+    this.blockColors = new HashMap<>();
+    this.itemColors = new HashMap<>();
+    modEventBus.addListener((FMLClientSetupEvent event) -> this.clientSetups.forEach(event::enqueueWork));
+    modEventBus.addListener((ColorHandlerEvent.Block event) -> this.blockColors.forEach(event.getBlockColors()::register));
+    modEventBus.addListener((ColorHandlerEvent.Item event) -> this.itemColors.forEach(event.getItemColors()::register));
   }
 
   public DeferredRegister<Block> getBlocks() {
@@ -247,6 +267,18 @@ public final class RegistryWrapper {
 
   public DeferredRegister<GlobalLootModifierSerializer<?>> getLootModifierSerializers() {
     return lootModifierSerializers;
+  }
+
+  public Set<Runnable> getClientJobList() {
+    return clientSetups;
+  }
+
+  public Map<IBlockColor, Block[]> getBlockColorMap() {
+    return blockColors;
+  }
+
+  public Map<IItemColor, Item[]> getItemColorMap() {
+    return itemColors;
   }
 
   public static RegistryWrapper create(String modId) {

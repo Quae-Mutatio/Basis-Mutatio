@@ -104,7 +104,9 @@ jar {
         ])
     }
 }
+
 jar.finalizedBy('reobfJar')
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
