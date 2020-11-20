@@ -2,10 +2,12 @@ package dev.quae.mods.basis.wrappers;
 
 import com.electronwill.nightconfig.core.utils.TransformingCollection;
 import com.google.common.collect.HashBiMap;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.color.BlockColors;
 import net.minecraft.client.renderer.color.IBlockColor;
@@ -86,8 +88,8 @@ public final class RegistryWrapper {
   private final DeferredRegister<DataSerializerEntry> dataSerializers;
   private final DeferredRegister<GlobalLootModifierSerializer<?>> lootModifierSerializers;
   private final Set<Runnable> clientSetups;
-  private final Map<IBlockColor, Block[]> blockColors;
-  private final Map<IItemColor, Item[]> itemColors;
+  private final Map<IBlockColor, Supplier<Block>[]> blockColors;
+  private final Map<IItemColor, Supplier<Item>[]> itemColors;
 
   private RegistryWrapper(final String modId) {
     final IEventBus modEventBus = ModList.get()
@@ -133,8 +135,8 @@ public final class RegistryWrapper {
     this.blockColors = new HashMap<>();
     this.itemColors = new HashMap<>();
     modEventBus.addListener((FMLClientSetupEvent event) -> this.clientSetups.forEach(event::enqueueWork));
-    modEventBus.addListener((ColorHandlerEvent.Block event) -> this.blockColors.forEach(event.getBlockColors()::register));
-    modEventBus.addListener((ColorHandlerEvent.Item event) -> this.itemColors.forEach(event.getItemColors()::register));
+    modEventBus.addListener((ColorHandlerEvent.Block event) -> this.blockColors.forEach((color, suppliers) ->  event.getBlockColors().register(color, Arrays.stream(suppliers).map(Supplier::get).toArray(Block[]::new))));
+    modEventBus.addListener((ColorHandlerEvent.Item event) -> this.itemColors.forEach((color, suppliers) -> event.getItemColors().register(color, Arrays.stream(suppliers).map(Supplier::get).toArray(Item[]::new))));
   }
 
   public DeferredRegister<Block> getBlocks() {
@@ -273,11 +275,11 @@ public final class RegistryWrapper {
     return clientSetups;
   }
 
-  public Map<IBlockColor, Block[]> getBlockColorMap() {
+  public Map<IBlockColor, Supplier<Block>[]> getBlockColorMap() {
     return blockColors;
   }
 
-  public Map<IItemColor, Item[]> getItemColorMap() {
+  public Map<IItemColor, Supplier<Item>[]> getItemColorMap() {
     return itemColors;
   }
 

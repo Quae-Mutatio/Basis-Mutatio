@@ -236,12 +236,12 @@ public abstract class BasePart implements IPart {
   }
 
   @Override
-  public void registerBlockColors(IBlockColor color, Block... blocks) {
+  public void registerBlockColors(IBlockColor color, Supplier<Block>... blocks) {
     registryWrapper.getBlockColorMap().put(color, blocks);
   }
 
   @Override
-  public void registerItemColors(IItemColor color, Item... items) {
+  public void registerItemColors(IItemColor color, Supplier<Item>... items) {
     registryWrapper.getItemColorMap().put(color, items);
   }
 

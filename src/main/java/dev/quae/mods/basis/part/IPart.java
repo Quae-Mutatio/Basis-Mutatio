@@ -110,9 +110,9 @@ public interface IPart {
 
   void registerClientJob(Runnable job);
 
-  void registerBlockColors(IBlockColor color, Block... blocks);
+  void registerBlockColors(IBlockColor color, Supplier<Block>... blocks);
 
-  void registerItemColors(IItemColor color, Item... items);
+  void registerItemColors(IItemColor color, Supplier<Item>... items);
 
   void initialize(RegistryWrapper registryWrapper, DataGeneratorWrapper dataGeneratorWrapper);
 }
