@@ -2,16 +2,19 @@ package dev.quae.mods.basis.wrappers;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
+import dev.quae.mods.basis.construct.SimpleConstruct;
+import dev.quae.mods.basis.data.BMBlockLootTables;
+import dev.quae.mods.basis.data.ConstructProvider;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import net.minecraft.block.Block;
 import net.minecraft.data.BlockTagsProvider;
 import net.minecraft.data.DataGenerator;
@@ -22,7 +25,6 @@ import net.minecraft.data.ItemTagsProvider;
 import net.minecraft.data.LootTableProvider;
 import net.minecraft.data.RecipeProvider;
 import net.minecraft.data.TagsProvider;
-import net.minecraft.data.loot.BlockLootTables;
 import net.minecraft.entity.EntityType;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
@@ -37,27 +39,31 @@ import net.minecraftforge.client.model.generators.BlockStateProvider;
 import net.minecraftforge.client.model.generators.ItemModelProvider;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.common.data.LanguageProvider;
-import net.minecraftforge.registries.ForgeRegistries;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class DataGeneratorWrapper {
 
+  private static final Logger LOGGER = LogManager.getLogger(DataGeneratorWrapper.class);
+
   private final String modId;
-  public final Set<Consumer<LanguageProvider>> en_usTranslations;
+  public final Map<String, Set<Consumer<LanguageProvider>>> translations;
   public final Set<Consumer<ItemModelProvider>> itemModelRegisterers;
   public final Set<Consumer<BlockStateProvider>> blockStateAndModelRegisterers;
-  public final Set<Consumer<BlockLootTables>> blockLootTableRegisterers;
+  public final Set<Consumer<BMBlockLootTables>> blockLootTableRegisterers;
   public final Set<BiConsumer<RecipeProvider, Consumer<IFinishedRecipe>>> recipeRegisterers;
   public final Set<Consumer<Function<INamedTag<Block>, TagsProvider.Builder<Block>>>> blockTagRegisterers;
   public final Set<Consumer<Function<INamedTag<Item>, TagsProvider.Builder<Item>>>> itemTagRegisterers;
   public final Set<Consumer<Function<INamedTag<Fluid>, TagsProvider.Builder<Fluid>>>> fluidTagRegisterers;
   public final Set<Consumer<Function<INamedTag<EntityType<?>>, TagsProvider.Builder<EntityType<?>>>>> entityTypeTagRegisterers;
+  public final Map<ResourceLocation, SimpleConstruct.Builder> constructRegisterers;
 
   private DataGeneratorWrapper(final String modId) {
     this.modId = modId;
 
     // Client Assets
-    en_usTranslations = new HashSet<>();
+    translations = new HashMap<>();
     itemModelRegisterers = new HashSet<>();
     blockStateAndModelRegisterers = new HashSet<>();
 
@@ -68,18 +74,32 @@ public class DataGeneratorWrapper {
     itemTagRegisterers = new HashSet<>();
     fluidTagRegisterers = new HashSet<>();
     entityTypeTagRegisterers = new HashSet<>();
+    constructRegisterers = new HashMap<>();
   }
 
   public void processData(final DataGenerator dataGenerator, final ExistingFileHelper existingFileHelper) {
 
     // Client assets
-    dataGenerator.addProvider(new LanguageProvider(dataGenerator, modId, "en_us") {
-      @Override
-      protected void addTranslations() {
-        for (Consumer<LanguageProvider> en_usTranslation : en_usTranslations) {
-          en_usTranslation.accept(this);
+    for (Entry<String, Set<Consumer<LanguageProvider>>> entry : translations.entrySet()) {
+      dataGenerator.addProvider(new LanguageProvider(dataGenerator, modId, entry.getKey()) {
+        @Override
+        protected void addTranslations() {
+          for (Consumer<LanguageProvider> translation : entry.getValue()) {
+            translation.accept(this);
+          }
         }
-        en_usTranslations.clear();
+      });
+      entry.getValue().clear();
+    }
+    translations.clear();
+
+    dataGenerator.addProvider(new BlockStateProvider(dataGenerator, modId, existingFileHelper) {
+      @Override
+      protected void registerStatesAndModels() {
+        for (Consumer<BlockStateProvider> blockStateAndModelRegisterer : blockStateAndModelRegisterers) {
+          blockStateAndModelRegisterer.accept(this);
+        }
+        blockStateAndModelRegisterers.clear();
       }
     });
     dataGenerator.addProvider(new ItemModelProvider(dataGenerator, modId, existingFileHelper) {
@@ -89,15 +109,6 @@ public class DataGeneratorWrapper {
           itemModelRegisterer.accept(this);
         }
         itemModelRegisterers.clear();
-      }
-    });
-    dataGenerator.addProvider(new BlockStateProvider(dataGenerator, modId, existingFileHelper) {
-      @Override
-      protected void registerStatesAndModels() {
-        for (Consumer<BlockStateProvider> blockStateAndModelRegisterer : blockStateAndModelRegisterers) {
-          blockStateAndModelRegisterer.accept(this);
-        }
-        blockStateAndModelRegisterers.clear();
       }
     });
 
@@ -112,19 +123,13 @@ public class DataGeneratorWrapper {
       @Override
       protected List<Pair<Supplier<Consumer<BiConsumer<ResourceLocation, Builder>>>, LootParameterSet>> getTables() {
         return ImmutableList.of(
-            Pair.of(() -> new BlockLootTables() {
+            Pair.of(() -> new BMBlockLootTables() {
               @Override
               protected void addTables() {
-                for (Consumer<BlockLootTables> blockLootTablesRegisterer : blockLootTableRegisterers) {
+                for (Consumer<BMBlockLootTables> blockLootTablesRegisterer : blockLootTableRegisterers) {
                   blockLootTablesRegisterer.accept(this);
                 }
                 blockLootTableRegisterers.clear();
-              }
-
-              @NotNull
-              @Override
-              protected Iterable<Block> getKnownBlocks() {
-                return ForgeRegistries.BLOCKS.getValues().stream().filter(it -> Objects.requireNonNull(it.getRegistryName()).getNamespace().equals(modId)).collect(Collectors.toSet());
               }
             }, LootParameterSets.BLOCK)
         );
@@ -174,6 +179,14 @@ public class DataGeneratorWrapper {
           entityTypeTagRegisterer.accept(this::getOrCreateBuilder);
         }
         entityTypeTagRegisterers.clear();
+      }
+    });
+
+    dataGenerator.addProvider(new ConstructProvider(dataGenerator, modId) {
+      @Override
+      protected void registerConstructs(BiConsumer<ResourceLocation, SimpleConstruct.Builder> consumer) {
+        constructRegisterers.forEach(consumer);
+        constructRegisterers.clear();
       }
     });
   }

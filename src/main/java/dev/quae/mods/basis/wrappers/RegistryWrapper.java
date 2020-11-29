@@ -1,7 +1,7 @@
 package dev.quae.mods.basis.wrappers;
 
-import com.electronwill.nightconfig.core.utils.TransformingCollection;
-import com.google.common.collect.HashBiMap;
+import dev.quae.mods.basis.construct.IConstruct;
+import dev.quae.mods.basis.construct.IConstruct.Type;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import net.minecraft.block.Block;
-import net.minecraft.client.renderer.color.BlockColors;
 import net.minecraft.client.renderer.color.IBlockColor;
 import net.minecraft.client.renderer.color.IItemColor;
 import net.minecraft.enchantment.Enchantment;
@@ -87,56 +86,58 @@ public final class RegistryWrapper {
   private final DeferredRegister<TreeDecoratorType<?>> treeDecoratorTypes;
   private final DeferredRegister<DataSerializerEntry> dataSerializers;
   private final DeferredRegister<GlobalLootModifierSerializer<?>> lootModifierSerializers;
+  private final DeferredRegister<IConstruct.Type> constructPartTypes;
   private final Set<Runnable> clientSetups;
   private final Map<IBlockColor, Supplier<Block>[]> blockColors;
   private final Map<IItemColor, Supplier<Item>[]> itemColors;
+  private final IEventBus bus;
 
   private RegistryWrapper(final String modId) {
-    final IEventBus modEventBus = ModList.get()
-        .getModContainerById(modId)
+    this.bus = ModList.get().getModContainerById(modId)
         .filter(FMLModContainer.class::isInstance)
         .map(FMLModContainer.class::cast)
-        .orElseThrow(() -> new RuntimeException(String.format("Failed to create a registry wrapper for %s, because it either doesn't exist or is not an FML mod.", modId)))
-        .getEventBus();
-    (this.blocks = DeferredRegister.create(ForgeRegistries.BLOCKS, modId)).register(modEventBus);
-    (this.fluids = DeferredRegister.create(ForgeRegistries.FLUIDS, modId)).register(modEventBus);
-    (this.items = DeferredRegister.create(ForgeRegistries.ITEMS, modId)).register(modEventBus);
-    (this.potions = DeferredRegister.create(ForgeRegistries.POTIONS, modId)).register(modEventBus);
-    (this.sound_events = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, modId)).register(modEventBus);
-    (this.potion_types = DeferredRegister.create(ForgeRegistries.POTION_TYPES, modId)).register(modEventBus);
-    (this.enchantments = DeferredRegister.create(ForgeRegistries.ENCHANTMENTS, modId)).register(modEventBus);
-    (this.entities = DeferredRegister.create(ForgeRegistries.ENTITIES, modId)).register(modEventBus);
-    (this.tile_entities = DeferredRegister.create(ForgeRegistries.TILE_ENTITIES, modId)).register(modEventBus);
-    (this.particleTypes = DeferredRegister.create(ForgeRegistries.PARTICLE_TYPES, modId)).register(modEventBus);
-    (this.containers = DeferredRegister.create(ForgeRegistries.CONTAINERS, modId)).register(modEventBus);
-    (this.paintingTypes = DeferredRegister.create(ForgeRegistries.PAINTING_TYPES, modId)).register(modEventBus);
-    (this.recipeSerializers = DeferredRegister.create(ForgeRegistries.RECIPE_SERIALIZERS, modId)).register(modEventBus);
-    (this.attributes = DeferredRegister.create(ForgeRegistries.ATTRIBUTES, modId)).register(modEventBus);
-    (this.statTypes = DeferredRegister.create(ForgeRegistries.STAT_TYPES, modId)).register(modEventBus);
-    (this.professions = DeferredRegister.create(ForgeRegistries.PROFESSIONS, modId)).register(modEventBus);
-    (this.poiTypes = DeferredRegister.create(ForgeRegistries.POI_TYPES, modId)).register(modEventBus);
-    (this.memoryModuleTypes = DeferredRegister.create(ForgeRegistries.MEMORY_MODULE_TYPES, modId)).register(modEventBus);
-    (this.sensorTypes = DeferredRegister.create(ForgeRegistries.SENSOR_TYPES, modId)).register(modEventBus);
-    (this.schedules = DeferredRegister.create(ForgeRegistries.SCHEDULES, modId)).register(modEventBus);
-    (this.activities = DeferredRegister.create(ForgeRegistries.ACTIVITIES, modId)).register(modEventBus);
-    (this.worldCarvers = DeferredRegister.create(ForgeRegistries.WORLD_CARVERS, modId)).register(modEventBus);
-    (this.surfaceBuilders = DeferredRegister.create(ForgeRegistries.SURFACE_BUILDERS, modId)).register(modEventBus);
-    (this.features = DeferredRegister.create(ForgeRegistries.FEATURES, modId)).register(modEventBus);
-    (this.decorators = DeferredRegister.create(ForgeRegistries.DECORATORS, modId)).register(modEventBus);
-    (this.chunkStatus = DeferredRegister.create(ForgeRegistries.CHUNK_STATUS, modId)).register(modEventBus);
-    (this.structureFeatures = DeferredRegister.create(ForgeRegistries.STRUCTURE_FEATURES, modId)).register(modEventBus);
-    (this.blockstateProviderTypes = DeferredRegister.create(ForgeRegistries.BLOCK_STATE_PROVIDER_TYPES, modId)).register(modEventBus);
-    (this.blockPlacerTypes = DeferredRegister.create(ForgeRegistries.BLOCK_PLACER_TYPES, modId)).register(modEventBus);
-    (this.foliagePlacerTypes = DeferredRegister.create(ForgeRegistries.FOLIAGE_PLACER_TYPES, modId)).register(modEventBus);
-    (this.treeDecoratorTypes = DeferredRegister.create(ForgeRegistries.TREE_DECORATOR_TYPES, modId)).register(modEventBus);
-    (this.dataSerializers = DeferredRegister.create(ForgeRegistries.DATA_SERIALIZERS, modId)).register(modEventBus);
-    (this.lootModifierSerializers = DeferredRegister.create(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS, modId)).register(modEventBus);
+        .map(FMLModContainer::getEventBus)
+        .orElseThrow(() -> new RuntimeException(String.format("Failed to create a registry wrapper for %s, because it either doesn't exist or is not an FML mod.", modId)));
+    (this.blocks = DeferredRegister.create(ForgeRegistries.BLOCKS, modId)).register(bus);
+    (this.fluids = DeferredRegister.create(ForgeRegistries.FLUIDS, modId)).register(bus);
+    (this.items = DeferredRegister.create(ForgeRegistries.ITEMS, modId)).register(bus);
+    (this.potions = DeferredRegister.create(ForgeRegistries.POTIONS, modId)).register(bus);
+    (this.sound_events = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, modId)).register(bus);
+    (this.potion_types = DeferredRegister.create(ForgeRegistries.POTION_TYPES, modId)).register(bus);
+    (this.enchantments = DeferredRegister.create(ForgeRegistries.ENCHANTMENTS, modId)).register(bus);
+    (this.entities = DeferredRegister.create(ForgeRegistries.ENTITIES, modId)).register(bus);
+    (this.tile_entities = DeferredRegister.create(ForgeRegistries.TILE_ENTITIES, modId)).register(bus);
+    (this.particleTypes = DeferredRegister.create(ForgeRegistries.PARTICLE_TYPES, modId)).register(bus);
+    (this.containers = DeferredRegister.create(ForgeRegistries.CONTAINERS, modId)).register(bus);
+    (this.paintingTypes = DeferredRegister.create(ForgeRegistries.PAINTING_TYPES, modId)).register(bus);
+    (this.recipeSerializers = DeferredRegister.create(ForgeRegistries.RECIPE_SERIALIZERS, modId)).register(bus);
+    (this.attributes = DeferredRegister.create(ForgeRegistries.ATTRIBUTES, modId)).register(bus);
+    (this.statTypes = DeferredRegister.create(ForgeRegistries.STAT_TYPES, modId)).register(bus);
+    (this.professions = DeferredRegister.create(ForgeRegistries.PROFESSIONS, modId)).register(bus);
+    (this.poiTypes = DeferredRegister.create(ForgeRegistries.POI_TYPES, modId)).register(bus);
+    (this.memoryModuleTypes = DeferredRegister.create(ForgeRegistries.MEMORY_MODULE_TYPES, modId)).register(bus);
+    (this.sensorTypes = DeferredRegister.create(ForgeRegistries.SENSOR_TYPES, modId)).register(bus);
+    (this.schedules = DeferredRegister.create(ForgeRegistries.SCHEDULES, modId)).register(bus);
+    (this.activities = DeferredRegister.create(ForgeRegistries.ACTIVITIES, modId)).register(bus);
+    (this.worldCarvers = DeferredRegister.create(ForgeRegistries.WORLD_CARVERS, modId)).register(bus);
+    (this.surfaceBuilders = DeferredRegister.create(ForgeRegistries.SURFACE_BUILDERS, modId)).register(bus);
+    (this.features = DeferredRegister.create(ForgeRegistries.FEATURES, modId)).register(bus);
+    (this.decorators = DeferredRegister.create(ForgeRegistries.DECORATORS, modId)).register(bus);
+    (this.chunkStatus = DeferredRegister.create(ForgeRegistries.CHUNK_STATUS, modId)).register(bus);
+    (this.structureFeatures = DeferredRegister.create(ForgeRegistries.STRUCTURE_FEATURES, modId)).register(bus);
+    (this.blockstateProviderTypes = DeferredRegister.create(ForgeRegistries.BLOCK_STATE_PROVIDER_TYPES, modId)).register(bus);
+    (this.blockPlacerTypes = DeferredRegister.create(ForgeRegistries.BLOCK_PLACER_TYPES, modId)).register(bus);
+    (this.foliagePlacerTypes = DeferredRegister.create(ForgeRegistries.FOLIAGE_PLACER_TYPES, modId)).register(bus);
+    (this.treeDecoratorTypes = DeferredRegister.create(ForgeRegistries.TREE_DECORATOR_TYPES, modId)).register(bus);
+    (this.dataSerializers = DeferredRegister.create(ForgeRegistries.DATA_SERIALIZERS, modId)).register(bus);
+    (this.lootModifierSerializers = DeferredRegister.create(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS, modId)).register(bus);
+    (this.constructPartTypes = DeferredRegister.create(Type.class, modId)).register(bus);
     this.clientSetups = new HashSet<>();
     this.blockColors = new HashMap<>();
     this.itemColors = new HashMap<>();
-    modEventBus.addListener((FMLClientSetupEvent event) -> this.clientSetups.forEach(event::enqueueWork));
-    modEventBus.addListener((ColorHandlerEvent.Block event) -> this.blockColors.forEach((color, suppliers) ->  event.getBlockColors().register(color, Arrays.stream(suppliers).map(Supplier::get).toArray(Block[]::new))));
-    modEventBus.addListener((ColorHandlerEvent.Item event) -> this.itemColors.forEach((color, suppliers) -> event.getItemColors().register(color, Arrays.stream(suppliers).map(Supplier::get).toArray(Item[]::new))));
+    bus.addListener((FMLClientSetupEvent event) -> this.clientSetups.forEach(event::enqueueWork));
+    bus.addListener((ColorHandlerEvent.Block event) -> this.blockColors.forEach((color, suppliers) -> event.getBlockColors().register(color, Arrays.stream(suppliers).map(Supplier::get).toArray(Block[]::new))));
+    bus.addListener((ColorHandlerEvent.Item event) -> this.itemColors.forEach((color, suppliers) -> event.getItemColors().register(color, Arrays.stream(suppliers).map(Supplier::get).toArray(Item[]::new))));
   }
 
   public DeferredRegister<Block> getBlocks() {
@@ -271,6 +272,10 @@ public final class RegistryWrapper {
     return lootModifierSerializers;
   }
 
+  public DeferredRegister<Type> getConstructPartTypes() {
+    return constructPartTypes;
+  }
+
   public Set<Runnable> getClientJobList() {
     return clientSetups;
   }
@@ -285,5 +290,9 @@ public final class RegistryWrapper {
 
   public static RegistryWrapper create(String modId) {
     return new RegistryWrapper(modId);
+  }
+
+  public IEventBus getBus() {
+    return bus;
   }
 }
