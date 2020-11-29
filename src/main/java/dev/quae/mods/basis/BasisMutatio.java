@@ -6,6 +6,7 @@ import dev.quae.mods.basis.part.PartManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
@@ -21,7 +22,9 @@ public final class BasisMutatio {
 
   public BasisMutatio() {
     PartManager.registerParts();
-    Type.TYPE_DEFERRED_REGISTER.register(FMLJavaModLoadingContext.get().getModEventBus());
+    final IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+    modEventBus.addListener(this::newRegistry);
+    Type.TYPE_DEFERRED_REGISTER.register(modEventBus);
     MinecraftForge.EVENT_BUS.addListener(this::addReloadListener);
   }
 

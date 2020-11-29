@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import dev.quae.mods.basis.BasisMutatio;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -22,17 +23,11 @@ import org.apache.logging.log4j.Logger;
 
 public class ConstructRegistry extends JsonReloadListener {
 
-  public static final ConstructRegistry INSTANCE = new ConstructRegistry();
   private static final Gson GSON = (new GsonBuilder()).setPrettyPrinting().disableHtmlEscaping().create();
   private static final Logger LOGGER = LogManager.getLogger();
 
-  public static final IForgeRegistry<IConstruct> REGISTRY = new RegistryBuilder<IConstruct>()
-      .setName(new ResourceLocation(BasisMutatio.ID, "constructs"))
-      .setType(IConstruct.class)
-      .setMaxID(Integer.MAX_VALUE - 1)
-      .disableSaving()
-      .disableSync()
-      .create();
+  public static final ConstructRegistry INSTANCE = new ConstructRegistry();
+  public static final Map<ResourceLocation, IConstruct> REGISTRY = new HashMap<>();
 
   private ConstructRegistry() {
     super(GSON, "constructs");
@@ -49,7 +44,7 @@ public class ConstructRegistry extends JsonReloadListener {
       try {
         final Optional<SimpleConstruct> result = parser.apply(json).result();
         if (result.isPresent()) {
-          REGISTRY.register(result.get().setRegistryName(key));
+          REGISTRY.put(key, result.get().setRegistryName(key));
         } else {
           LOGGER.info("Failed to load JSON for {}", key);
         }
@@ -58,4 +53,6 @@ public class ConstructRegistry extends JsonReloadListener {
       }
     }
   }
+
+
 }

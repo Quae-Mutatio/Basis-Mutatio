@@ -87,9 +87,9 @@ public class DataGeneratorWrapper {
           for (Consumer<LanguageProvider> translation : entry.getValue()) {
             translation.accept(this);
           }
+          entry.getValue().clear();
         }
       });
-      entry.getValue().clear();
     }
     translations.clear();
 
