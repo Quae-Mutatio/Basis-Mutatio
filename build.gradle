@@ -23,14 +23,19 @@ version = property('version')
 group = property('group')
 archivesBaseName = property('id')
 
+// Include data-generated resources in the build and run processes
 sourceSets {
     test.resources.srcDirs += 'src/test/generated/resources'
 }
 
+// Setup the minecraft modding environment
 minecraft {
+    // Set the mappings used to translate the minecraft compiled code to readable code.
     mappings channel: 'snapshot', version: property('mcp.version')
 
     // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+
+    // Set the run configurations
     runs {
         client {
             property 'forge.logging.console.level', 'debug'
@@ -90,10 +95,12 @@ minecraft {
     }
 }
 
+// Add shade the the configs
 configurations {
     shade
 }
 
+// Include maven repos for required projects
 repositories {
     maven {
         name = "Progwml6 maven"  // JEI
@@ -105,6 +112,7 @@ repositories {
     }
 }
 
+// Add dependancies
 dependencies {
     minecraft "net.minecraftforge:forge:${property('mc.version')}-${property('forge.version')}"
 
@@ -120,6 +128,7 @@ dependencies {
     implementation 'com.intellij:annotations:+@jar'
 }
 
+// Shadow registrate into the jar
 shadowJar {
     configurations = [project.configurations.shade]
     relocate 'com.tterrag.registrate', "${property("group")}.registrate"

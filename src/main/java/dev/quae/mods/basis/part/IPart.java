@@ -1,7 +1,7 @@
 package dev.quae.mods.basis.part;
 
-import dev.quae.mods.basis.construct.IConstruct;
-import dev.quae.mods.basis.construct.SimpleConstruct;
+import dev.quae.mods.basis.construct.data.IConstructBuilder;
+import dev.quae.mods.basis.construct.type.IConstructType;
 import dev.quae.mods.basis.data.BMBlockLootTables;
 import dev.quae.mods.basis.wrappers.DataGeneratorWrapper;
 import dev.quae.mods.basis.wrappers.RegistryWrapper;
@@ -34,7 +34,6 @@ import net.minecraft.potion.Potion;
 import net.minecraft.stats.StatType;
 import net.minecraft.tags.ITag.INamedTag;
 import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.village.PointOfInterestType;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -125,7 +124,7 @@ public interface IPart {
 
   <T extends GlobalLootModifierSerializer<?>> RegistryObject<T> registerGlobalLootTableModifierSerializer(String name, Supplier<T> thing);
 
-  <T extends IConstruct.Type> RegistryObject<T> registerConstructPartType(String name, Supplier<T> type);
+  <T extends IConstructType> RegistryObject<T> registerConstructPartType(String name, Supplier<T> type);
 
   default <T extends Event> void registerForgeEventHandler(Consumer<T> eventHandler) {
     MinecraftForge.EVENT_BUS.addListener(eventHandler);
@@ -169,7 +168,7 @@ public interface IPart {
 
   void genEntityTag(Consumer<Function<INamedTag<EntityType<?>>, Builder<EntityType<?>>>> consumer);
 
-  void genConstruct(String name, SimpleConstruct.Builder builder);
+  void genConstruct(String name, IConstructBuilder builder);
 
   void initialize(RegistryWrapper registryWrapper, DataGeneratorWrapper dataGeneratorWrapper);
 }

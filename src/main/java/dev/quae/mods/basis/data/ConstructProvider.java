@@ -5,7 +5,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
-import dev.quae.mods.basis.construct.SimpleConstruct;
+import dev.quae.mods.basis.construct.core.IConstruct;
+import dev.quae.mods.basis.construct.data.IConstructBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -38,8 +39,8 @@ public abstract class ConstructProvider implements IDataProvider {
   @Override
   public void act(DirectoryCache cache) throws IOException {
     final Path rootPath = this.generator.getOutputFolder();
-    final Function<SimpleConstruct, DataResult<JsonElement>> encoder = JsonOps.INSTANCE.withEncoder(SimpleConstruct.CODEC);
-    BiConsumer<ResourceLocation, SimpleConstruct.Builder> consumer = (constructLocation, builder) -> {
+    final Function<IConstruct, DataResult<JsonElement>> encoder = JsonOps.INSTANCE.withEncoder(IConstruct.CODEC);
+    BiConsumer<ResourceLocation, IConstructBuilder> consumer = (constructLocation, builder) -> {
       final Path path = getPath(rootPath, constructLocation);
       try {
         final DataResult<JsonElement> apply = encoder.apply(builder.build());
@@ -57,7 +58,7 @@ public abstract class ConstructProvider implements IDataProvider {
     this.registerConstructs(consumer);
   }
 
-  protected abstract void registerConstructs(BiConsumer<ResourceLocation, SimpleConstruct.Builder> consumer);
+  protected abstract void registerConstructs(BiConsumer<ResourceLocation, IConstructBuilder> consumer);
 
   private static Path getPath(Path path, ResourceLocation constructLocation) {
     return path.resolve("data/" + constructLocation.getNamespace() + "/constructs/" + constructLocation.getPath() + ".json");

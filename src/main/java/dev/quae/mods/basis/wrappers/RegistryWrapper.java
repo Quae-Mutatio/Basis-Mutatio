@@ -1,7 +1,6 @@
 package dev.quae.mods.basis.wrappers;
 
-import dev.quae.mods.basis.construct.IConstruct;
-import dev.quae.mods.basis.construct.IConstruct.Type;
+import dev.quae.mods.basis.construct.type.IConstructType;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -86,7 +85,7 @@ public final class RegistryWrapper {
   private final DeferredRegister<TreeDecoratorType<?>> treeDecoratorTypes;
   private final DeferredRegister<DataSerializerEntry> dataSerializers;
   private final DeferredRegister<GlobalLootModifierSerializer<?>> lootModifierSerializers;
-  private final DeferredRegister<IConstruct.Type> constructPartTypes;
+  private final DeferredRegister<IConstructType> constructPartTypes;
   private final Set<Runnable> clientSetups;
   private final Map<IBlockColor, Supplier<Block>[]> blockColors;
   private final Map<IItemColor, Supplier<Item>[]> itemColors;
@@ -131,7 +130,7 @@ public final class RegistryWrapper {
     (this.treeDecoratorTypes = DeferredRegister.create(ForgeRegistries.TREE_DECORATOR_TYPES, modId)).register(bus);
     (this.dataSerializers = DeferredRegister.create(ForgeRegistries.DATA_SERIALIZERS, modId)).register(bus);
     (this.lootModifierSerializers = DeferredRegister.create(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS, modId)).register(bus);
-    (this.constructPartTypes = DeferredRegister.create(Type.class, modId)).register(bus);
+    (this.constructPartTypes = DeferredRegister.create(IConstructType.class, modId)).register(bus);
     this.clientSetups = new HashSet<>();
     this.blockColors = new HashMap<>();
     this.itemColors = new HashMap<>();
@@ -272,7 +271,7 @@ public final class RegistryWrapper {
     return lootModifierSerializers;
   }
 
-  public DeferredRegister<Type> getConstructPartTypes() {
+  public DeferredRegister<IConstructType> getConstructPartTypes() {
     return constructPartTypes;
   }
 

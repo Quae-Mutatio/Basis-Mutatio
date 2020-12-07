@@ -2,7 +2,7 @@ package dev.quae.mods.basis.wrappers;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
-import dev.quae.mods.basis.construct.SimpleConstruct;
+import dev.quae.mods.basis.construct.data.IConstructBuilder;
 import dev.quae.mods.basis.data.BMBlockLootTables;
 import dev.quae.mods.basis.data.ConstructProvider;
 import java.util.HashMap;
@@ -57,7 +57,7 @@ public class DataGeneratorWrapper {
   public final Set<Consumer<Function<INamedTag<Item>, TagsProvider.Builder<Item>>>> itemTagRegisterers;
   public final Set<Consumer<Function<INamedTag<Fluid>, TagsProvider.Builder<Fluid>>>> fluidTagRegisterers;
   public final Set<Consumer<Function<INamedTag<EntityType<?>>, TagsProvider.Builder<EntityType<?>>>>> entityTypeTagRegisterers;
-  public final Map<ResourceLocation, SimpleConstruct.Builder> constructRegisterers;
+  public final Map<ResourceLocation, IConstructBuilder> constructRegisterers;
 
   private DataGeneratorWrapper(final String modId) {
     this.modId = modId;
@@ -184,7 +184,7 @@ public class DataGeneratorWrapper {
 
     dataGenerator.addProvider(new ConstructProvider(dataGenerator, modId) {
       @Override
-      protected void registerConstructs(BiConsumer<ResourceLocation, SimpleConstruct.Builder> consumer) {
+      protected void registerConstructs(BiConsumer<ResourceLocation, IConstructBuilder> consumer) {
         constructRegisterers.forEach(consumer);
         constructRegisterers.clear();
       }

@@ -3,8 +3,9 @@ package dev.quae.mods.basis.part;
 import static net.minecraft.util.registry.Registry.CUSTOM_STAT;
 import static net.minecraft.util.registry.Registry.register;
 
-import dev.quae.mods.basis.construct.IConstruct;
-import dev.quae.mods.basis.construct.SimpleConstruct;
+import dev.quae.mods.basis.construct.core.IConstruct;
+import dev.quae.mods.basis.construct.data.IConstructBuilder;
+import dev.quae.mods.basis.construct.type.IConstructType;
 import dev.quae.mods.basis.data.BMBlockLootTables;
 import dev.quae.mods.basis.helpers.LootHelpers;
 import dev.quae.mods.basis.wrappers.DataGeneratorWrapper;
@@ -112,12 +113,19 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.event.lifecycle.IModBusEvent;
 import net.minecraftforge.registries.DataSerializerEntry;
-import net.minecraftforge.registries.RegistryBuilder;
+import net.minecraftforge.registries.DeferredRegister;
 
 public abstract class BasePart implements IPart {
 
   private RegistryWrapper registryWrapper;
   public DataGeneratorWrapper dataGeneratorWrapper;
+
+
+  protected void registerDeferredRegisters(DeferredRegister<?>... regs) {
+    for (DeferredRegister<?> reg : regs) {
+      reg.register(registryWrapper.getBus());
+    }
+  }
 
   @Override
   public <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> thing) {
@@ -285,7 +293,7 @@ public abstract class BasePart implements IPart {
   }
 
   @Override
-  public <T extends IConstruct.Type> RegistryObject<T> registerConstructPartType(String name, Supplier<T> type) {
+  public <T extends IConstructType> RegistryObject<T> registerConstructPartType(String name, Supplier<T> type) {
     return registryWrapper.getConstructPartTypes().register(name, type);
   }
 
@@ -365,7 +373,7 @@ public abstract class BasePart implements IPart {
   }
 
   @Override
-  public void genConstruct(String name, SimpleConstruct.Builder builder) {
+  public void genConstruct(String name, IConstructBuilder builder) {
     dataGeneratorWrapper.constructRegisterers.put(new ResourceLocation(ModLoadingContext.get().getActiveNamespace(), name), builder);
   }
 
