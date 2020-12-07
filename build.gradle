@@ -9,10 +9,6 @@ buildscript {
     }
 }
 
-plugins {
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
-}
-
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'maven-publish'
 
@@ -95,20 +91,11 @@ minecraft {
     }
 }
 
-// Add shade the the configs
-configurations {
-    shade
-}
-
 // Include maven repos for required projects
 repositories {
     maven {
         name = "Progwml6 maven"  // JEI
         url = "https://dvs1.progwml6.com/files/maven/"
-    }
-    maven {  // Registrate
-        name = "tterrag maven"
-        url = "https://maven.tterrag.com/"
     }
 }
 
@@ -116,22 +103,10 @@ repositories {
 dependencies {
     minecraft "net.minecraftforge:forge:${property('mc.version')}-${property('forge.version')}"
 
-    def registrate = "com.tterrag.registrate:Registrate:${property('registrate.version')}"
-    implementation fg.deobf(registrate) {
-        transitive = false
-    }
-    shade registrate
-
     compileOnly fg.deobf("mezz.jei:jei-${property('jei.version')}:api")
     runtimeOnly fg.deobf("mezz.jei:jei-${property('jei.version')}")
 
     implementation 'com.intellij:annotations:+@jar'
-}
-
-// Shadow registrate into the jar
-shadowJar {
-    configurations = [project.configurations.shade]
-    relocate 'com.tterrag.registrate', "${property("group")}.registrate"
 }
 
 jar {
