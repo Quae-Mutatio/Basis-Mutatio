@@ -8,6 +8,7 @@ buildscript {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
     }
 }
+
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'maven-publish'
 
@@ -18,42 +19,32 @@ version = property('version')
 group = property('group')
 archivesBaseName = property('id')
 
+// Include data-generated resources in the build and run processes
 sourceSets {
     test.resources.srcDirs += 'src/test/generated/resources'
 }
 
-repositories {
-    maven {
-        name = "Progwml6 maven" // JEI
-        url = "https://dvs1.progwml6.com/files/maven/"
-    }
-    /*maven {
-        name = "ModMaven"
-        url = "https://modmaven.k-4u.nl"
-    }*/
-}
-
-dependencies {
-    minecraft "net.minecraftforge:forge:${property('mc.version')}-${property('forge.version')}"
-
-    compileOnly fg.deobf("mezz.jei:jei-${property('mc.version')}:${property('jei.version')}:api")
-    runtimeOnly fg.deobf("mezz.jei:jei-${property('mc.version')}:${property('jei.version')}")
-
-    implementation 'com.intellij:annotations:+@jar'
-}
-
+// Setup the minecraft modding environment
 minecraft {
+    // Set the mappings used to translate the minecraft compiled code to readable code.
     mappings channel: 'snapshot', version: property('mcp.version')
 
     // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+
+    // Set the run configurations
     runs {
         client {
             property 'forge.logging.console.level', 'debug'
+            if (findProject(":workspace") != null) {
+                ideaModule "${rootProject.name}.${project.name}.main"
+            } else {
+                ideaModule "${project.name}.main"
+            }
+            property 'fml.earlyprogresswindow', 'false'
             workingDirectory project.file('run')
-            ideaModule "${project.name}.main"
             args '--username', property('mc.username'), '--password', property('mc.password')
             mods {
-                Basis {
+                Mod {
                     source sourceSets.main
                     source sourceSets.test
                 }
@@ -62,10 +53,14 @@ minecraft {
 
         server {
             property 'forge.logging.console.level', 'debug'
+            if (findProject(":workspace") != null) {
+                ideaModule "${rootProject.name}.${project.name}.main"
+            } else {
+                ideaModule "${project.name}.main"
+            }
             workingDirectory project.file('run')
-            ideaModule "${project.name}.main"
             mods {
-                Basis {
+                Mod {
                     source sourceSets.main
                     source sourceSets.test
                 }
@@ -74,21 +69,44 @@ minecraft {
 
         data {
             property 'forge.logging.console.level', 'debug'
+            if (findProject(":workspace") != null) {
+                ideaModule "${rootProject.name}.${project.name}.main"
+            } else {
+                ideaModule "${project.name}.main"
+            }
+            property 'fml.earlyprogresswindow', 'false'
             workingDirectory project.file('run')
-            ideaModule "${project.name}.main"
-            args '--mod', 'basismutatio',
+            args '--mod', property('id'),
                     '--all',
                     '--output', file('src/test/generated/resources/'),
                     '--existing', file('src/test/resources'),
                     '--existing', file('src/test/generated/resources/')
             mods {
-                Basis {
+                Mod {
                     source sourceSets.main
                     source sourceSets.test
                 }
             }
         }
     }
+}
+
+// Include maven repos for required projects
+repositories {
+    maven {
+        name = "Progwml6 maven"  // JEI
+        url = "https://dvs1.progwml6.com/files/maven/"
+    }
+}
+
+// Add dependancies
+dependencies {
+    minecraft "net.minecraftforge:forge:${property('mc.version')}-${property('forge.version')}"
+
+    compileOnly fg.deobf("mezz.jei:jei-${property('jei.version')}:api")
+    runtimeOnly fg.deobf("mezz.jei:jei-${property('jei.version')}")
+
+    implementation 'com.intellij:annotations:+@jar'
 }
 
 jar {
@@ -98,7 +116,7 @@ jar {
                 "Specification-Vendor"    : project.property('authors'),
                 "Specification-Version"   : "1",
                 "Implementation-Title"    : project.name,
-                "Implementation-Version"  : "${version}",
+                "Implementation-Version"  : "${project.version}",
                 "Implementation-Vendor"   : project.property('group'),
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
